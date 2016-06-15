@@ -70,7 +70,11 @@ function handleSearchString(term, req, res) {
 }
 
 function handleArticle(article, req, res) {
-  var html = fs.readFileSync(path.join(__dirname, '../res/template.html')).toString();
+  var template = '../res/template_no_img.html';
+  
+  if(article.multimedia.length > 0) template = '../res/template.html';
+  
+  var html = fs.readFileSync(path.join(__dirname, template)).toString();
   
   html = html.replace(/##LINK##/ig, article.web_url);
   html = html.replace(/##SAFE_LINK##/ig, '');
