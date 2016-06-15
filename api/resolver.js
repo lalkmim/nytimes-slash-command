@@ -7,17 +7,13 @@ var path = require('path');
 
 // The API that returns the in-email representation.
 module.exports = function(req, res) {
-  var title = req.query.title;
-  if(title) title = title.trim();
-  
   var term = req.query.text;
   if(term) term = term.trim();
   
-  //if (/^http:\/\/nytimes\.com\/\S+/.test(term)) {
-  if(title != '') {
+  if (/^nytimes\.com\/\S+/.test(term)) {
     // Special-case: handle strings in the special URL form that are suggested by the /typeahead
     // API. This is how the command hint menu suggests an exact Giphy image.
-    handleIdString(title, req, res);
+    handleIdString(term, req, res);
   } else {
     // Else, if the user was typing fast and press enter before the /typeahead API can respond,
     // Mixmax will just send the text to the /resolver API (for performance). Handle that here.
@@ -26,6 +22,8 @@ module.exports = function(req, res) {
 };
 
 function handleIdString(headline, req, res) {
+  headline = headline.replace('nytimes.com/', '');
+  
   var response;
   try {
     response = sync.await(request({
@@ -52,7 +50,7 @@ function handleSearchString(term, req, res) {
   var response;
   try {
     response = sync.await(request({
-      url: 'http://api.giphy.com/v1/gifs/random',
+      url: 'https://api.nytimes.com/svc/search/v2/articlesearch.json',
       qs: {
         'api-key': key,
         q: term,
