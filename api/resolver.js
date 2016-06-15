@@ -71,16 +71,18 @@ function handleSearchString(term, req, res) {
 
 function handleArticle(article, req, res) {
   var template = '../res/template_no_img.html';
+  var hasImage = article.multimedia.length > 0;
   
-  if(article.multimedia.length > 0) template = '../res/template.html';
+  if(hasImage) template = '../res/template.html';
   
   var html = fs.readFileSync(path.join(__dirname, template)).toString();
   
   html = html.replace(/##LINK##/ig, article.web_url);
   html = html.replace(/##SAFE_LINK##/ig, '');
-  html = html.replace(/##IMG_SRC##/ig, article.multimedia[0].url);
   html = html.replace(/##HEADLINE##/ig, article.headline.main);
   html = html.replace(/##SNIPPET##/ig, article.snippet);
+  
+  if(hasImage)  html = html.replace(/##IMG_SRC##/ig, article.multimedia[0].url);
   
   res.json({
     body: html
