@@ -39,8 +39,6 @@ module.exports = function(req, res) {
     return;
   }
 
-  console.log(response.body.response.docs);
-
   var results = _.chain(response.body.response.docs)
     .reject(function(article) {
       return !article;
