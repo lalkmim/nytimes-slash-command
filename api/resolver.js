@@ -9,8 +9,8 @@ var path = require('path');
 module.exports = function(req, res) {
   var term = req.query.text;
   if(term) term = term.trim();
-  
-  if (/^nytimes\.com\/\S+/.test(term)) {
+
+  if (/nytimes\.com\/\S+/.test(term)) {
     // Special-case: handle strings in the special URL form that are suggested by the /typeahead
     // API. This is how the command hint menu suggests an exact Giphy image.
     handleIdString(term, req, res);
