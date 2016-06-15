@@ -1,4 +1,4 @@
-var key = require('../utils/key');
+var key = require('../utils/nyt_api_key');
 var sync = require('synchronize');
 var request = require('request');
 var _ = require('underscore');
@@ -18,11 +18,12 @@ module.exports = function(req, res) {
   var response;
   try {
     response = sync.await(request({
-      url: 'http://api.giphy.com/v1/gifs/search',
+      url: 'https://api.nytimes.com/svc/search/v2/articlesearch.json',
       qs: {
         q: term,
         limit: 15,
-        api_key: key
+        'api-key': key,
+        fl: 'web_url,snippet,multimedia,headline,_id'
       },
       gzip: true,
       json: true,
@@ -33,19 +34,21 @@ module.exports = function(req, res) {
     return;
   }
 
-  if (response.statusCode !== 200 || !response.body || !response.body.data) {
+  if (response.statusCode !== 200 || !response.body || !response.body.response || response.body.status != 'OK') {
     res.status(500).send('Error');
     return;
   }
 
-  var results = _.chain(response.body.data)
-    .reject(function(image) {
-      return !image || !image.images || !image.images.fixed_height_small;
+  console.log(response.body.response.docs);
+
+  var results = _.chain(response.body.response.docs)
+    .reject(function(article) {
+      return !article;
     })
-    .map(function(image) {
+    .map(function(article) {
       return {
-        title: '<img style="height:75px" src="' + image.images.fixed_height_small.url + '">',
-        text: 'http://giphy.com/' + image.id
+        title: article.headline.main,
+        text: article.web_url
       };
     })
     .value();

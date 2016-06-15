@@ -1,17 +1,20 @@
-var key = require('../utils/key');
+var key = require('../utils/nyt_api_key');
 var sync = require('synchronize');
 var request = require('request');
-var _ = require('underscore');
+var fs = require('fs');
+var path = require('path');
 
 
 // The API that returns the in-email representation.
 module.exports = function(req, res) {
+  var title = req.query.title.trim();
   var term = req.query.text.trim();
-
-  if (/^http:\/\/giphy\.com\/\S+/.test(term)) {
+  
+  //if (/^http:\/\/nytimes\.com\/\S+/.test(term)) {
+  if(title != '') {
     // Special-case: handle strings in the special URL form that are suggested by the /typeahead
     // API. This is how the command hint menu suggests an exact Giphy image.
-    handleIdString(term.replace(/^http:\/\/giphy\.com\//, ''), req, res);
+    handleIdString(title, req, res);
   } else {
     // Else, if the user was typing fast and press enter before the /typeahead API can respond,
     // Mixmax will just send the text to the /resolver API (for performance). Handle that here.
@@ -19,13 +22,15 @@ module.exports = function(req, res) {
   }
 };
 
-function handleIdString(id, req, res) {
+function handleIdString(headline, req, res) {
   var response;
   try {
     response = sync.await(request({
-      url: 'http://api.giphy.com/v1/gifs/' + encodeURIComponent(id),
+      url: 'https://api.nytimes.com/svc/search/v2/articlesearch.json',
       qs: {
-        api_key: key
+        'api-key': key,
+        fq: 'headline:("' + headline + '")',
+        fl: 'web_url,_id,headline,multimedia,snippet'
       },
       gzip: true,
       json: true,
@@ -36,13 +41,8 @@ function handleIdString(id, req, res) {
     return;
   }
 
-  var image = response.body.data.images.original;
-  var width = image.width > 600 ? 600 : image.width;
-  var html = '<img style="max-width:100%;" src="' + image.url + '" width="' + width + '"/>';
-  res.json({
-    body: html
-    // Add raw:true if you're returning content that you want the user to be able to edit
-  });
+  var article = response.body.response.docs[0];
+  handleArticle(article, req, res);
 }
 
 function handleSearchString(term, req, res) {
@@ -51,8 +51,9 @@ function handleSearchString(term, req, res) {
     response = sync.await(request({
       url: 'http://api.giphy.com/v1/gifs/random',
       qs: {
-        tag: term,
-        api_key: key
+        'api-key': key,
+        q: term,
+        fl: 'web_url,_id,headline,multimedia,snippet'
       },
       gzip: true,
       json: true,
@@ -63,13 +64,20 @@ function handleSearchString(term, req, res) {
     return;
   }
 
-  var data = response.body.data;
+  var article = response.body.response.docs[0];
+  handleArticle(article, req, res);
+}
 
-  // Cap at 600px wide
-  var width = data.image_width > 600 ? 600 : data.image_width;
-  var html = '<img style="max-width:100%;" src="' + data.image_url + '" width="' + width + '"/>';
+function handleArticle(article, req, res) {
+  var html = fs.readFileSync(path.join(__dirname, '../res/template.html')).toString();
+  
+  html = html.replace(/##LINK##/ig, article.web_url);
+  html = html.replace(/##SAFE_LINK##/ig, '');
+  html = html.replace(/##IMG_SRC##/ig, article.multimedia[0].url);
+  html = html.replace(/##HEADLINE##/ig, article.headline.main);
+  html = html.replace(/##SNIPPET##/ig, article.snippet);
+  
   res.json({
     body: html
-    // Add raw:true if you're returning content that you want the user to be able to edit
   });
 }
