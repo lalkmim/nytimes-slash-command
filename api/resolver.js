@@ -12,7 +12,7 @@ module.exports = function(req, res) {
 
   if (/nytimes\.com\/\S+/.test(term)) {
     // Special-case: handle strings in the special URL form that are suggested by the /typeahead
-    // API. This is how the command hint menu suggests an exact Giphy image.
+    // API. This is how the command hint menu suggests an exact article.
     handleIdString(term, req, res);
   } else {
     // Else, if the user was typing fast and press enter before the /typeahead API can respond,
