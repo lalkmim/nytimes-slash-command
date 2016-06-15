@@ -7,8 +7,11 @@ var path = require('path');
 
 // The API that returns the in-email representation.
 module.exports = function(req, res) {
-  var title = req.query.title.trim();
-  var term = req.query.text.trim();
+  var title = req.query.title;
+  if(title) title = title.trim();
+  
+  var term = req.query.text;
+  if(term) term = term.trim();
   
   //if (/^http:\/\/nytimes\.com\/\S+/.test(term)) {
   if(title != '') {
