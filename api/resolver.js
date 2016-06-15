@@ -21,16 +21,14 @@ module.exports = function(req, res) {
   }
 };
 
-function handleIdString(headline, req, res) {
-  headline = headline.replace('nytimes.com/', '');
-  
+function handleIdString(url, req, res) {
   var response;
   try {
     response = sync.await(request({
       url: 'https://api.nytimes.com/svc/search/v2/articlesearch.json',
       qs: {
         'api-key': key,
-        fq: 'headline:("' + headline + '")',
+        fq: 'web_url:("' + url + '")',
         fl: 'web_url,_id,headline,multimedia,snippet'
       },
       gzip: true,

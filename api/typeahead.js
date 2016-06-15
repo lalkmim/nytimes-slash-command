@@ -46,7 +46,7 @@ module.exports = function(req, res) {
     .map(function(article) {
       return {
         title: article.headline.main,
-        text: 'nytimes.com/' + article.headline.main
+        text: article.web_url
       };
     })
     .value();
